@@ -150,7 +150,7 @@ private fun GrupoSobreVoce(uiState: PossoDoarUiState, viewModel: PossoDoarViewMo
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp),
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp)
@@ -232,7 +232,7 @@ private fun GrupoPerguntas(
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp),
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp)
@@ -317,7 +317,7 @@ private fun CartaoResultado(resultado: ResultadoTriagem) {
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = cor.copy(alpha = 0.12f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp),
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp)

@@ -14,7 +14,10 @@ val HemareSuperficie = Color(0xFFFFFFFF)
 val HemareTextoEscuro = Color(0xFF2B0D10)
 val HemareTextoSuave = Color(0xFF8A6B6F)
 
-val HemareFundoEscuro = Color(0xFF121212)
-val HemareSuperficieEscura = Color(0xFF1E1E1E)
-val HemareTextoClaro = Color(0xFFF5F5F5)
-val HemareTextoSuaveEscuro = Color(0xFFA0A0A0)
+// Tons escuros com leve tintura vinho/vermelha (em vez de cinza neutro puro),
+// pra manter a identidade Hemare mesmo no tema escuro — que é o padrão do app.
+val HemareFundoEscuro = Color(0xFF170F10)
+val HemareSuperficieEscura = Color(0xFF231719)
+val HemareSuperficieVarianteEscura = Color(0xFF2F2023)
+val HemareTextoClaro = Color(0xFFF5EDEC)
+val HemareTextoSuaveEscuro = Color(0xFFB3A0A2)

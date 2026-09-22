@@ -30,7 +30,7 @@ private val HemareDarkColorScheme = darkColorScheme(
     onBackground = HemareTextoClaro,
     surface = HemareSuperficieEscura,
     onSurface = HemareTextoClaro,
-    surfaceVariant = HemareSuperficieEscura,
+    surfaceVariant = HemareSuperficieVarianteEscura,
     onSurfaceVariant = HemareTextoSuaveEscuro,
     error = HemareVermelhoEscuro
 )
