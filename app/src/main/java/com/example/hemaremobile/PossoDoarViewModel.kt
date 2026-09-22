@@ -113,9 +113,12 @@ private fun avaliarTriagem(idade: Int, peso: Int, r: Map<String, Boolean>): Resu
     if (r["temChagas"] == true) impedimentos += "Você marcou Doença de Chagas."
     if (r["usaDrogasInjetaveis"] == true) impedimentos += "Você marcou uso de drogas injetáveis."
     if (r["hepatiteAposOnzeAnos"] == true) impedimentos += "Você marcou hepatite após os 11 anos de idade."
+    if (peso > 0 && peso < PESO_MIN) impedimentos += "Seu peso está abaixo de 50 kg, que é o mínimo para doar."
+    if (idade > 0 && idade < IDADE_MIN) impedimentos += "A idade mínima para doar é 16 anos."
 
-    if (peso > 0 && peso < PESO_MIN) atencoes += "Seu peso está abaixo de 50 kg, que é o mínimo para doar."
-    if (idade > 0 && (idade < IDADE_MIN || idade > IDADE_MAX)) atencoes += "A idade para doar é de 16 a 69 anos."
+    if (idade in IDADE_MIN..17) atencoes += "Entre 16 e 17 anos, a doação exige autorização de um responsável legal."
+    if (idade in 60..IDADE_MAX) atencoes += "Acima de 60 anos, a primeira doação exige avaliação médica antes de doar."
+    if (idade > IDADE_MAX) atencoes += "A idade máxima para doar é 69 anos — confirme com o hemocentro."
 
     if (r["tatuagemRecente"] == true) atencoes += "Tatuagem/micropigmentação nos últimos 12 meses (1 ano) pede um tempo de espera."
     if (r["gripeResfriado"] == true) atencoes += "Gripe ou resfriado recente pede aguardar alguns dias."
