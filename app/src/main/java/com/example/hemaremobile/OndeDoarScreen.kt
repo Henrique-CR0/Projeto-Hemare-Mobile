@@ -53,7 +53,7 @@ private val hemocentros = listOf(
 )
 
 @Composable
-fun OndeDoarScreen() {
+fun OndeDoarScreen(onVoltar: () -> Unit = {}) {
     var busca by remember { mutableStateOf("") }
     val filtrados = remember(busca) {
         if (busca.isBlank()) {
@@ -75,7 +75,7 @@ fun OndeDoarScreen() {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
-            CabecalhoVermelho(titulo = "Onde doar")
+            CabecalhoVermelho(titulo = "Onde doar", onVoltar = onVoltar)
         }
 
         item {

@@ -48,7 +48,7 @@ import com.example.hemaremobile.ui.theme.HemareVermelho
 private val CorAmarela = Color(0xFFE0B000)
 
 @Composable
-fun PossoDoarScreen(viewModel: PossoDoarViewModel = viewModel()) {
+fun PossoDoarScreen(onVoltar: () -> Unit = {}, viewModel: PossoDoarViewModel = viewModel()) {
     val uiState by viewModel.uiState.collectAsState()
 
     LazyColumn(
@@ -59,7 +59,7 @@ fun PossoDoarScreen(viewModel: PossoDoarViewModel = viewModel()) {
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item {
-            CabecalhoVermelho(titulo = "Posso doar?")
+            CabecalhoVermelho(titulo = "Posso doar?", onVoltar = onVoltar)
         }
 
         item {
