@@ -55,7 +55,7 @@ private fun selo(veredito: Veredito): Pair<String, Color> = when (veredito) {
 }
 
 @Composable
-fun MitosScreen() {
+fun MitosScreen(onVoltar: () -> Unit = {}) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -64,7 +64,7 @@ fun MitosScreen() {
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item {
-            CabecalhoVermelho(titulo = "Mitos e verdades")
+            CabecalhoVermelho(titulo = "Mitos e verdades", onVoltar = onVoltar)
         }
 
         item {

@@ -106,7 +106,7 @@ private val fasesGuia = listOf(
 private const val AVISO_GUIA = "⚠️ Informações orientativas, baseadas no Ministério da Saúde e em hemocentros oficiais. A avaliação final é feita por um profissional no dia da doação."
 
 @Composable
-fun GuiaScreen() {
+fun GuiaScreen(onVoltar: () -> Unit = {}) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -115,7 +115,7 @@ fun GuiaScreen() {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            CabecalhoVermelho(titulo = "Guia de doação")
+            CabecalhoVermelho(titulo = "Guia de doação", onVoltar = onVoltar)
         }
 
         fasesGuia.forEach { fase ->

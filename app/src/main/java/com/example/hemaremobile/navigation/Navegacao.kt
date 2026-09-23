@@ -148,10 +148,18 @@ fun HemareApp(
                 composable(RotasLista.HUB) {
                     ListaScreen(onItemClick = { rota -> navController.navigate(rota) })
                 }
-                composable(RotasLista.POSSO_DOAR) { PossoDoarScreen() }
-                composable(RotasLista.ONDE_DOAR) { OndeDoarScreen() }
-                composable(RotasLista.GUIA) { GuiaScreen() }
-                composable(RotasLista.MITOS) { MitosScreen() }
+                composable(RotasLista.POSSO_DOAR) {
+                    PossoDoarScreen(onVoltar = { navController.popBackStack() })
+                }
+                composable(RotasLista.ONDE_DOAR) {
+                    OndeDoarScreen(onVoltar = { navController.popBackStack() })
+                }
+                composable(RotasLista.GUIA) {
+                    GuiaScreen(onVoltar = { navController.popBackStack() })
+                }
+                composable(RotasLista.MITOS) {
+                    MitosScreen(onVoltar = { navController.popBackStack() })
+                }
             }
 
             composable(Aba.Configuracao.rota) {
