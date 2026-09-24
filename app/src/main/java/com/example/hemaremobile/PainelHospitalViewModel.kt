@@ -5,6 +5,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 val TIPOS_SANGUINEOS = listOf("O-", "O+", "A-", "A+", "B-", "B+", "AB-", "AB+")
 
@@ -57,6 +60,12 @@ private val DOADORES_MOCK = listOf(
     DoadorCompativel(8, "Lucas Martins", "AB-", "Osasco, SP", "", identificado = false)
 )
 
+data class DoacaoConfirmada(
+    val doadorNome: String,
+    val tipoSanguineo: String,
+    val dataHora: String
+)
+
 data class PainelHospitalUiState(
     val estoque: Map<String, String> = emptyMap(),
     val necessidades: List<Necessidade> = emptyList(),
@@ -64,7 +73,8 @@ data class PainelHospitalUiState(
     val urgenciaSelecionada: String = "alerta",
     val mensagem: String = "",
     val necessidadeEmMatch: Necessidade? = null,
-    val confirmados: Set<Int> = emptySet()
+    val confirmados: Set<Int> = emptySet(),
+    val historico: List<DoacaoConfirmada> = emptyList()
 )
 
 /**
@@ -115,7 +125,14 @@ class PainelHospitalViewModel : ViewModel() {
     }
 
     fun confirmarDoacao(doadorId: Int) {
-        _uiState.update { it.copy(confirmados = it.confirmados + doadorId) }
+        val doador = DOADORES_MOCK.find { it.id == doadorId } ?: return
+        val agora = SimpleDateFormat("dd/MM 'às' HH:mm", Locale("pt", "BR")).format(Date())
+        _uiState.update {
+            it.copy(
+                confirmados = it.confirmados + doadorId,
+                historico = it.historico + DoacaoConfirmada(doador.nome, doador.tipoSanguineo, agora)
+            )
+        }
     }
 
     fun tiposCompativeis(tipoReceptor: String): List<String> = COMPATIBILIDADE[tipoReceptor] ?: emptyList()
