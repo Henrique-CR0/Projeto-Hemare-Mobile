@@ -147,19 +147,19 @@ fun CadastroHospitalScreen(
 
         item { CampoAuth(valor = nome, aoAlterar = { nome = it }, rotulo = "Nome do hospital") }
         item {
-            CampoAuth(
+            CampoAuthMascarado(
                 valor = cnpj,
-                aoAlterar = { cnpj = mascaraCnpj(it) },
+                aoAlterar = { cnpj = it },
                 rotulo = "CNPJ",
-                tipoTeclado = KeyboardType.Number
+                mascara = ::mascaraCnpj
             )
         }
         item {
-            CampoAuth(
+            CampoAuthMascarado(
                 valor = cnes,
-                aoAlterar = { cnes = it.filter { c -> c.isDigit() }.take(7) },
+                aoAlterar = { cnes = it },
                 rotulo = "CNES",
-                tipoTeclado = KeyboardType.Number
+                mascara = { it.filter { c -> c.isDigit() }.take(7) }
             )
         }
         item {
@@ -179,11 +179,11 @@ fun CadastroHospitalScreen(
             )
         }
         item {
-            CampoAuth(
+            CampoAuthMascarado(
                 valor = cep,
-                aoAlterar = { cep = mascaraCep(it) },
+                aoAlterar = { cep = it },
                 rotulo = "CEP",
-                tipoTeclado = KeyboardType.Number
+                mascara = ::mascaraCep
             )
         }
         item { CampoAuth(valor = endereco, aoAlterar = { endereco = it }, rotulo = "Endereço (rua)") }
