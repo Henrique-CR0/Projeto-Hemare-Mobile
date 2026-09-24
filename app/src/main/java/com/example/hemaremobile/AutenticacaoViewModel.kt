@@ -8,11 +8,26 @@ import kotlinx.coroutines.flow.update
 
 enum class TipoConta { DOADOR, HOSPITAL }
 
+/** Dados do hospital coletados no cadastro (CadastroHospitalScreen). */
+data class PerfilHospital(
+    val cnpj: String,
+    val cnes: String,
+    val cep: String,
+    val endereco: String,
+    val numero: String,
+    val bairro: String,
+    val complemento: String,
+    val cidade: String,
+    val estado: String,
+    val aprovado: Boolean = true
+)
+
 data class ContaUsuario(
     val nome: String,
     val email: String,
     val senha: String,
-    val tipo: TipoConta
+    val tipo: TipoConta,
+    val perfilHospital: PerfilHospital? = null
 )
 
 data class AutenticacaoUiState(
@@ -55,8 +70,32 @@ class AutenticacaoViewModel : ViewModel() {
         _uiState.value = AutenticacaoUiState(contaLogada = conta)
     }
 
-    fun cadastrarHospital(nome: String, email: String, senha: String) {
-        val conta = ContaUsuario(nome, email.trim(), senha, TipoConta.HOSPITAL)
+    fun cadastrarHospital(
+        nome: String,
+        email: String,
+        senha: String,
+        cnpj: String,
+        cnes: String,
+        cep: String,
+        endereco: String,
+        numero: String,
+        bairro: String,
+        complemento: String,
+        cidade: String,
+        estado: String
+    ) {
+        val perfil = PerfilHospital(
+            cnpj = cnpj,
+            cnes = cnes,
+            cep = cep,
+            endereco = endereco,
+            numero = numero,
+            bairro = bairro,
+            complemento = complemento,
+            cidade = cidade,
+            estado = estado
+        )
+        val conta = ContaUsuario(nome, email.trim(), senha, TipoConta.HOSPITAL, perfil)
         contasCadastradas.removeAll { it.email.equals(conta.email, ignoreCase = true) }
         contasCadastradas.add(conta)
         _uiState.value = AutenticacaoUiState(contaLogada = conta)

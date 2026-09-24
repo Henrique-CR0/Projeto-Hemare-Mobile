@@ -113,7 +113,12 @@ fun CadastroHospitalScreen(
             }
             else -> {
                 mensagem = ""
-                viewModel.cadastrarHospital(nome, email, senha)
+                viewModel.cadastrarHospital(
+                    nome = nome, email = email, senha = senha,
+                    cnpj = cnpj, cnes = cnes, cep = cep, endereco = endereco,
+                    numero = numero, bairro = bairro, complemento = complemento,
+                    cidade = cidade, estado = estado
+                )
             }
         }
     }
