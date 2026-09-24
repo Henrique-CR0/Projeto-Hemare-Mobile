@@ -63,8 +63,7 @@ private fun corUrgencia(urgencia: String): Color = when (urgencia) {
 
 @Composable
 fun PainelHospitalScreen(
-    nomeHospital: String,
-    onSair: () -> Unit,
+    onVoltar: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: PainelHospitalViewModel = viewModel()
 ) {
@@ -78,27 +77,7 @@ fun PainelHospitalScreen(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item {
-            CabecalhoVermelho(titulo = "Painel do Hospital")
-        }
-
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = nomeHospital,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                TextButton(onClick = onSair) {
-                    Text("Sair")
-                }
-            }
+            CabecalhoVermelho(titulo = "Estoque e necessidades", onVoltar = onVoltar)
         }
 
         item {

@@ -27,18 +27,25 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hemaremobile.AutenticacaoViewModel
 import com.example.hemaremobile.CadastroDoadorScreen
 import com.example.hemaremobile.CadastroHospitalScreen
 import com.example.hemaremobile.ConfiguracaoScreen
 import com.example.hemaremobile.ConfiguracaoViewModel
 import com.example.hemaremobile.GuiaScreen
+import com.example.hemaremobile.HistoricoDoacoesScreen
 import com.example.hemaremobile.InicioScreen
 import com.example.hemaremobile.ListaScreen
 import com.example.hemaremobile.LoginScreen
 import com.example.hemaremobile.MitosScreen
 import com.example.hemaremobile.OndeDoarScreen
+import com.example.hemaremobile.PainelHospitalHubScreen
 import com.example.hemaremobile.PainelHospitalScreen
+import com.example.hemaremobile.PainelHospitalViewModel
+import com.example.hemaremobile.PerfilHospital
+import com.example.hemaremobile.PerfilInstituicaoScreen
+import com.example.hemaremobile.PlanoScreen
 import com.example.hemaremobile.PossoDoarScreen
 import com.example.hemaremobile.TipoConta
 
@@ -58,6 +65,15 @@ object RotasLista {
     const val ONDE_DOAR = "lista/onde-doar"
     const val GUIA = "lista/guia"
     const val MITOS = "lista/mitos"
+}
+
+/** Sub-rotas de conteúdo dentro da aba Painel do hospital. */
+object RotasHospital {
+    const val HUB = "hospital/painel/hub"
+    const val ESTOQUE = "hospital/painel/estoque"
+    const val HISTORICO = "hospital/painel/historico"
+    const val PERFIL = "hospital/painel/perfil"
+    const val PLANO = "hospital/painel/plano"
 }
 
 /** Rotas da tela de login/cadastro, mostradas antes de entrar na área do doador ou do hospital. */
@@ -91,6 +107,7 @@ fun HemareRaiz(
             configuracaoViewModel = configuracaoViewModel,
             nomeHospital = conta.nome,
             emailHospital = conta.email,
+            perfilHospital = conta.perfilHospital,
             onSair = autenticacaoViewModel::sair
         )
     }
@@ -220,6 +237,7 @@ private fun HospitalApp(
     configuracaoViewModel: ConfiguracaoViewModel,
     nomeHospital: String,
     emailHospital: String,
+    perfilHospital: PerfilHospital?,
     onSair: () -> Unit
 ) {
     val navController = rememberNavController()
@@ -232,8 +250,54 @@ private fun HospitalApp(
             startDestination = AbaHospital.Painel.rota,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(AbaHospital.Painel.rota) {
-                PainelHospitalScreen(nomeHospital = nomeHospital, onSair = onSair)
+            navigation(startDestination = RotasHospital.HUB, route = AbaHospital.Painel.rota) {
+                composable(RotasHospital.HUB) {
+                    val painelViewModel: PainelHospitalViewModel = viewModel(
+                        navController.getBackStackEntry(AbaHospital.Painel.rota)
+                    )
+                    PainelHospitalHubScreen(
+                        nomeHospital = nomeHospital,
+                        aprovado = perfilHospital?.aprovado ?: true,
+                        onSair = onSair,
+                        onItemClick = { rota -> navController.navigate(rota) },
+                        viewModel = painelViewModel
+                    )
+                }
+                composable(RotasHospital.ESTOQUE) {
+                    val painelViewModel: PainelHospitalViewModel = viewModel(
+                        navController.getBackStackEntry(AbaHospital.Painel.rota)
+                    )
+                    PainelHospitalScreen(
+                        onVoltar = { navController.popBackStack() },
+                        viewModel = painelViewModel
+                    )
+                }
+                composable(RotasHospital.HISTORICO) {
+                    val painelViewModel: PainelHospitalViewModel = viewModel(
+                        navController.getBackStackEntry(AbaHospital.Painel.rota)
+                    )
+                    HistoricoDoacoesScreen(
+                        onVoltar = { navController.popBackStack() },
+                        viewModel = painelViewModel
+                    )
+                }
+                composable(RotasHospital.PERFIL) {
+                    PerfilInstituicaoScreen(
+                        nomeHospital = nomeHospital,
+                        email = emailHospital,
+                        perfil = perfilHospital,
+                        onVoltar = { navController.popBackStack() }
+                    )
+                }
+                composable(RotasHospital.PLANO) {
+                    val painelViewModel: PainelHospitalViewModel = viewModel(
+                        navController.getBackStackEntry(AbaHospital.Painel.rota)
+                    )
+                    PlanoScreen(
+                        onVoltar = { navController.popBackStack() },
+                        viewModel = painelViewModel
+                    )
+                }
             }
             composable(AbaHospital.Configuracao.rota) {
                 ConfiguracaoScreen(
