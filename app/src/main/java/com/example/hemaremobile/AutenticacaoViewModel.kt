@@ -23,14 +23,12 @@ data class AutenticacaoUiState(
 /**
  * Presentation Layer: sessão e contas guardadas só em memória (mock), sem chamadas
  * reais ao backend nem persistência — isso é responsabilidade da Data layer futura.
- * Já vem com 2 contas de exemplo para testar o login sem precisar cadastrar antes.
+ * Sem contas de exemplo: pra entrar, é preciso se cadastrar primeiro (como doador ou
+ * como hospital) nesta mesma sessão do app.
  */
 class AutenticacaoViewModel : ViewModel() {
 
-    private val contasCadastradas = mutableListOf(
-        ContaUsuario("Maria Doadora", "doador@hemare.com", "doador123", TipoConta.DOADOR),
-        ContaUsuario("Hospital São Lucas", "hospital@hemare.com", "hospital123", TipoConta.HOSPITAL)
-    )
+    private val contasCadastradas = mutableListOf<ContaUsuario>()
 
     private val _uiState = MutableStateFlow(AutenticacaoUiState())
     val uiState: StateFlow<AutenticacaoUiState> = _uiState.asStateFlow()

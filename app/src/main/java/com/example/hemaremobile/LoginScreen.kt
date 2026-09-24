@@ -108,13 +108,5 @@ fun LoginScreen(
         TextButton(onClick = onIrParaCadastroHospital) {
             Text("É um hospital ou hemocentro? Cadastre sua instituição")
         }
-
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text = "Contas de teste — doador: doador@hemare.com / doador123 · hospital: hospital@hemare.com / hospital123",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
-        )
     }
 }
