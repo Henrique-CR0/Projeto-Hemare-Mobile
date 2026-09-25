@@ -129,8 +129,10 @@ fun ConfiguracaoScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                Desenvolvedor(nome = "Henrique Carneiro Ribeiro", email = "carneiro.ribeiro@novaroma.edu.br")
-                Desenvolvedor(nome = "Lucas Pereira Vietiez", email = "lucas.veietez@novaroma.edu.br")
+                Desenvolvedor(nome = "Henrique Carneiro Ribeiro", funcao = "SM (Scrum Master)")
+                Desenvolvedor(nome = "Rinaldo Pereira de Andrade Júnior", funcao = "Dev Front")
+                Desenvolvedor(nome = "Lucas Pereira Vietiez", funcao = "Dev Back")
+                Desenvolvedor(nome = "Thiago Louback Bonifácio", funcao = "UX/UI")
             }
         }
     }
@@ -194,7 +196,7 @@ private fun LinhaValor(titulo: String, valor: String) {
 }
 
 @Composable
-private fun Desenvolvedor(nome: String, email: String) {
+private fun Desenvolvedor(nome: String, funcao: String) {
     Column {
         Text(
             text = nome,
@@ -203,7 +205,7 @@ private fun Desenvolvedor(nome: String, email: String) {
             color = MaterialTheme.colorScheme.onSurface
         )
         Text(
-            text = email,
+            text = funcao,
             fontSize = 13.sp,
             color = HemareVermelhoAcao,
             modifier = Modifier.padding(top = 1.dp)
