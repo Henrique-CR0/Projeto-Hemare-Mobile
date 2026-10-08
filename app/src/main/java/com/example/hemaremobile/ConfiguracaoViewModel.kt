@@ -1,31 +1,34 @@
 package com.example.hemaremobile
 
 import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
+import androidx.lifecycle.viewModelScope
+import com.example.hemaremobile.data.repository.Preferencias
+import com.example.hemaremobile.data.repository.PreferenciasRepository
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 data class ConfiguracaoUiState(
     val temaEscuro: Boolean = true,
     val notificacoesAtivas: Boolean = true
 )
 
-/**
- * Presentation Layer: preferências guardadas só em memória (StateFlow),
- * sem persistência real — isso é responsabilidade da Data layer futura.
- * O tema escuro começa ativado (visual padrão do Hemare).
- */
-class ConfiguracaoViewModel : ViewModel() {
+/** Preferências salvas no aparelho (DataStore): continuam valendo ao fechar e abrir o app. */
+class ConfiguracaoViewModel(private val repositorio: PreferenciasRepository) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(ConfiguracaoUiState())
-    val uiState: StateFlow<ConfiguracaoUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<ConfiguracaoUiState> = repositorio.preferencias
+        .map { it.paraUiState() }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, ConfiguracaoUiState())
 
     fun alternarTemaEscuro(ativo: Boolean) {
-        _uiState.update { it.copy(temaEscuro = ativo) }
+        viewModelScope.launch { repositorio.definirTemaEscuro(ativo) }
     }
 
     fun alternarNotificacoes(ativo: Boolean) {
-        _uiState.update { it.copy(notificacoesAtivas = ativo) }
+        viewModelScope.launch { repositorio.definirNotificacoes(ativo) }
     }
+
+    private fun Preferencias.paraUiState() = ConfiguracaoUiState(temaEscuro, notificacoesAtivas)
 }

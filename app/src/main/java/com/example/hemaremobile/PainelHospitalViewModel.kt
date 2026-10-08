@@ -1,70 +1,17 @@
 package com.example.hemaremobile
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.hemaremobile.data.repository.HospitalRepository
+import com.example.hemaremobile.domain.DoacaoConfirmada
+import com.example.hemaremobile.domain.DoadorCompativel
+import com.example.hemaremobile.domain.Necessidade
+import com.example.hemaremobile.domain.Resultado
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-
-val TIPOS_SANGUINEOS = listOf("O-", "O+", "A-", "A+", "B-", "B+", "AB-", "AB+")
-
-val NIVEIS_ESTOQUE = listOf(
-    "estavel" to "🟢 Estável",
-    "alerta" to "🟡 Alerta",
-    "critico" to "🔴 Crítico",
-    "emergencia" to "⚫ Emergência"
-)
-
-val URGENCIAS_DETALHADAS = listOf(
-    "estavel" to "🟢 Estável — reposição de rotina",
-    "alerta" to "🟡 Alerta — estoque baixo",
-    "critico" to "🔴 Crítico — poucos dias de estoque",
-    "emergencia" to "⚫ Emergência — situação extrema"
-)
-
-data class Necessidade(val id: Int, val tipoSanguineo: String, val urgencia: String)
-
-data class DoadorCompativel(
-    val id: Int,
-    val nome: String,
-    val tipoSanguineo: String,
-    val cidade: String,
-    val telefone: String,
-    val identificado: Boolean
-)
-
-/** Quem pode doar para cada tipo receptor (regra real de compatibilidade ABO/Rh). */
-private val COMPATIBILIDADE = mapOf(
-    "O+" to listOf("O+", "O-"),
-    "O-" to listOf("O-"),
-    "A+" to listOf("A+", "A-", "O+", "O-"),
-    "A-" to listOf("A-", "O-"),
-    "B+" to listOf("B+", "B-", "O+", "O-"),
-    "B-" to listOf("B-", "O-"),
-    "AB+" to listOf("O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"),
-    "AB-" to listOf("A-", "B-", "O-", "AB-")
-)
-
-/** Presentation Layer: diretório de doadores fixo (mock), só para simular o match. */
-private val DOADORES_MOCK = listOf(
-    DoadorCompativel(1, "Ana Beatriz Souza", "O-", "São Paulo, SP", "(11) 91234-5678", identificado = true),
-    DoadorCompativel(2, "Carlos Eduardo Lima", "O+", "São Paulo, SP", "", identificado = false),
-    DoadorCompativel(3, "Fernanda Costa", "A+", "Campinas, SP", "(19) 99876-5432", identificado = true),
-    DoadorCompativel(4, "João Pedro Alves", "A-", "São Paulo, SP", "", identificado = false),
-    DoadorCompativel(5, "Mariana Oliveira", "B+", "Guarulhos, SP", "(11) 98765-4321", identificado = true),
-    DoadorCompativel(6, "Rafael Santos", "B-", "São Paulo, SP", "", identificado = false),
-    DoadorCompativel(7, "Beatriz Fernandes", "AB+", "São Paulo, SP", "(11) 97654-3210", identificado = true),
-    DoadorCompativel(8, "Lucas Martins", "AB-", "Osasco, SP", "", identificado = false)
-)
-
-data class DoacaoConfirmada(
-    val doadorNome: String,
-    val tipoSanguineo: String,
-    val dataHora: String
-)
+import kotlinx.coroutines.launch
 
 data class PainelHospitalUiState(
     val estoque: Map<String, String> = emptyMap(),
@@ -73,23 +20,42 @@ data class PainelHospitalUiState(
     val urgenciaSelecionada: String = "alerta",
     val mensagem: String = "",
     val necessidadeEmMatch: Necessidade? = null,
+    val doadoresMatch: List<DoadorCompativel> = emptyList(),
     val confirmados: Set<Int> = emptySet(),
     val historico: List<DoacaoConfirmada> = emptyList()
 )
 
 /**
- * Presentation Layer: estoque, necessidades e match guardados só em memória (mock),
- * sem chamadas reais ao backend — isso é responsabilidade da Data layer futura.
+ * Painel do hospital (hub, estoque/necessidades, histórico e plano compartilham esta instância).
+ * Estoque, necessidades e doações confirmadas ficam no banco do aparelho e são enviados
+ * para a API do Hemare quando há sessão com o servidor.
  */
-class PainelHospitalViewModel : ViewModel() {
+class PainelHospitalViewModel(
+    private val repositorio: HospitalRepository,
+    private val hospital: String
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PainelHospitalUiState())
     val uiState: StateFlow<PainelHospitalUiState> = _uiState.asStateFlow()
 
-    private var proximoId = 1
+    init {
+        viewModelScope.launch {
+            repositorio.observarEstoque(hospital).collect { estoque -> _uiState.update { it.copy(estoque = estoque) } }
+        }
+        viewModelScope.launch {
+            repositorio.observarNecessidades(hospital).collect { lista -> _uiState.update { it.copy(necessidades = lista) } }
+        }
+        viewModelScope.launch {
+            repositorio.observarConfirmados(hospital).collect { ids -> _uiState.update { it.copy(confirmados = ids) } }
+        }
+        viewModelScope.launch {
+            repositorio.observarHistorico(hospital).collect { lista -> _uiState.update { it.copy(historico = lista) } }
+        }
+    }
 
     fun definirEstoque(tipo: String, nivel: String) {
         _uiState.update { it.copy(estoque = it.estoque + (tipo to nivel)) }
+        viewModelScope.launch { repositorio.definirEstoque(hospital, tipo, nivel) }
     }
 
     fun selecionarTipo(tipo: String) {
@@ -102,43 +68,34 @@ class PainelHospitalViewModel : ViewModel() {
 
     fun publicar() {
         val estado = _uiState.value
-        if (estado.tipoSelecionado.isEmpty()) {
-            _uiState.update { it.copy(mensagem = "❌ Escolha o tipo sanguíneo.") }
-            return
-        }
-        val nova = Necessidade(proximoId++, estado.tipoSelecionado, estado.urgenciaSelecionada)
-        _uiState.update {
-            it.copy(
-                necessidades = it.necessidades + nova,
-                tipoSelecionado = "",
-                mensagem = "✅ Necessidade publicada com sucesso."
-            )
+        viewModelScope.launch {
+            when (val r = repositorio.publicar(hospital, estado.tipoSelecionado, estado.urgenciaSelecionada)) {
+                is Resultado.Sucesso -> _uiState.update { it.copy(tipoSelecionado = "", mensagem = r.valor) }
+                is Resultado.Falha -> _uiState.update { it.copy(mensagem = r.mensagem) }
+            }
         }
     }
 
+    /** Abre o match: busca os doadores compatíveis (API do Hemare ou diretório do aparelho). */
     fun verMatch(necessidade: Necessidade) {
-        _uiState.update { it.copy(necessidadeEmMatch = necessidade) }
+        _uiState.update { it.copy(necessidadeEmMatch = necessidade, doadoresMatch = emptyList()) }
+        viewModelScope.launch {
+            val doadores = repositorio.doadoresCompativeis(necessidade)
+            _uiState.update { if (it.necessidadeEmMatch == necessidade) it.copy(doadoresMatch = doadores) else it }
+        }
     }
 
     fun fecharMatch() {
-        _uiState.update { it.copy(necessidadeEmMatch = null) }
+        _uiState.update { it.copy(necessidadeEmMatch = null, doadoresMatch = emptyList()) }
     }
 
+    /** Confirma a doação de um doador do match aberto (ids desconhecidos são ignorados). */
     fun confirmarDoacao(doadorId: Int) {
-        val doador = DOADORES_MOCK.find { it.id == doadorId } ?: return
-        val agora = SimpleDateFormat("dd/MM 'às' HH:mm", Locale("pt", "BR")).format(Date())
-        _uiState.update {
-            it.copy(
-                confirmados = it.confirmados + doadorId,
-                historico = it.historico + DoacaoConfirmada(doador.nome, doador.tipoSanguineo, agora)
-            )
-        }
+        val doador = _uiState.value.doadoresMatch.find { it.id == doadorId } ?: return
+        _uiState.update { it.copy(confirmados = it.confirmados + doadorId) }
+        viewModelScope.launch { repositorio.confirmarDoacao(hospital, doador) }
     }
 
-    fun tiposCompativeis(tipoReceptor: String): List<String> = COMPATIBILIDADE[tipoReceptor] ?: emptyList()
-
-    fun doadoresCompativeis(tipoReceptor: String): List<DoadorCompativel> {
-        val tipos = tiposCompativeis(tipoReceptor)
-        return DOADORES_MOCK.filter { it.tipoSanguineo in tipos }
-    }
+    fun tiposCompativeis(tipoReceptor: String): List<String> =
+        com.example.hemaremobile.domain.tiposCompativeis(tipoReceptor)
 }

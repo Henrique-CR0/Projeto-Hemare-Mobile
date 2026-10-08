@@ -1,5 +1,6 @@
 package com.example.hemaremobile
 
+import com.example.hemaremobile.domain.TIPOS_SANGUINEOS
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
