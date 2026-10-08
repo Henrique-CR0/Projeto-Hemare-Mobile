@@ -1,5 +1,8 @@
 package com.example.hemaremobile
 
+import com.example.hemaremobile.domain.mascaraCnpj
+import com.example.hemaremobile.domain.cnpjValido
+import com.example.hemaremobile.domain.mascaraCep
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -40,44 +43,6 @@ private val ESTADOS = listOf(
     "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG",
     "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
 )
-
-private fun mascaraCnpj(valor: String): String {
-    val digitos = valor.filter { it.isDigit() }.take(14)
-    val sb = StringBuilder()
-    digitos.forEachIndexed { indice, digito ->
-        when (indice) {
-            2, 5 -> sb.append('.')
-            8 -> sb.append('/')
-            12 -> sb.append('-')
-        }
-        sb.append(digito)
-    }
-    return sb.toString()
-}
-
-private fun cnpjValido(valor: String): Boolean {
-    val cnpj = valor.filter { it.isDigit() }
-    if (cnpj.length != 14 || cnpj.all { it == cnpj[0] }) return false
-
-    fun calcularDigito(base: Int): Int {
-        var soma = 0
-        var pos = base - 7
-        for (i in base downTo 1) {
-            soma += (cnpj[base - i] - '0') * pos
-            pos--
-            if (pos < 2) pos = 9
-        }
-        val resto = soma % 11
-        return if (resto < 2) 0 else 11 - resto
-    }
-
-    return calcularDigito(12) == (cnpj[12] - '0') && calcularDigito(13) == (cnpj[13] - '0')
-}
-
-private fun mascaraCep(valor: String): String {
-    val digitos = valor.filter { it.isDigit() }.take(8)
-    return if (digitos.length > 5) "${digitos.substring(0, 5)}-${digitos.substring(5)}" else digitos
-}
 
 @Composable
 fun CadastroHospitalScreen(

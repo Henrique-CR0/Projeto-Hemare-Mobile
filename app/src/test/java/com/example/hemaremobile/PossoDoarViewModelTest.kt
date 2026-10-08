@@ -1,5 +1,7 @@
 package com.example.hemaremobile
 
+import com.example.hemaremobile.domain.NivelResultado
+import com.example.hemaremobile.domain.ResultadoTriagem
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue

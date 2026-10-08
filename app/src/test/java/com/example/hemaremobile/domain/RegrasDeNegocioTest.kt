@@ -96,18 +96,24 @@ class RegrasTriagemTest {
 
     @Test
     fun `impedimento definitivo gera vermelho mesmo com atencoes`() {
-        val r = avaliarTriagem(25, 45, mapOf("temHIV" to true, "gripeResfriado" to true))
+        val r = avaliarTriagem(25, 70, mapOf("temHIV" to true, "gripeResfriado" to true))
         assertEquals(NivelResultado.VERMELHO, r.nivel)
         assertEquals(listOf("Você marcou HIV/AIDS."), r.motivos)
     }
 
     @Test
     fun `limites de idade e peso`() {
-        assertEquals(NivelResultado.AMARELO, avaliarTriagem(15, 70, semRespostas).nivel)
+        // abaixo do minimo e impedimento (vermelho)
+        assertEquals(NivelResultado.VERMELHO, avaliarTriagem(15, 70, semRespostas).nivel)
+        assertEquals(NivelResultado.VERMELHO, avaliarTriagem(30, 49, semRespostas).nivel)
+        // 16-17 anos exigem autorizacao e 60-69 avaliacao medica (amarelo)
+        assertEquals(NivelResultado.AMARELO, avaliarTriagem(IDADE_MIN, PESO_MIN, semRespostas).nivel)
+        assertEquals(NivelResultado.AMARELO, avaliarTriagem(IDADE_MAX, PESO_MIN, semRespostas).nivel)
+        // acima da idade maxima: confirmar no hemocentro (amarelo)
         assertEquals(NivelResultado.AMARELO, avaliarTriagem(70, 70, semRespostas).nivel)
-        assertEquals(NivelResultado.AMARELO, avaliarTriagem(30, 49, semRespostas).nivel)
-        assertEquals(NivelResultado.VERDE, avaliarTriagem(IDADE_MIN, PESO_MIN, semRespostas).nivel)
-        assertEquals(NivelResultado.VERDE, avaliarTriagem(IDADE_MAX, PESO_MIN, semRespostas).nivel)
+        // faixa sem restricoes
+        assertEquals(NivelResultado.VERDE, avaliarTriagem(18, PESO_MIN, semRespostas).nivel)
+        assertEquals(NivelResultado.VERDE, avaliarTriagem(59, 90, semRespostas).nivel)
     }
 
     @Test

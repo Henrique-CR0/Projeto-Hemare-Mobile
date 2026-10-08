@@ -24,12 +24,15 @@ import com.example.hemaremobile.data.remote.MatchResponse
 import com.example.hemaremobile.data.remote.MensagemResponse
 import com.example.hemaremobile.data.remote.NecessidadeDto
 import com.example.hemaremobile.data.remote.NecessidadeRequest
+import com.example.hemaremobile.data.remote.PerfilHospitalRequest
 import com.example.hemaremobile.data.remote.Sessao
 import com.example.hemaremobile.data.remote.UsuarioDto
 import com.example.hemaremobile.data.repository.AutenticacaoRepositoryImpl
 import com.example.hemaremobile.data.repository.HemocentroRepositoryImpl
 import com.example.hemaremobile.data.repository.HospitalRepositoryImpl
+import com.example.hemaremobile.domain.DoadorCompativel
 import com.example.hemaremobile.domain.Necessidade
+import com.example.hemaremobile.domain.PerfilHospital
 import com.example.hemaremobile.domain.Resultado
 import com.example.hemaremobile.domain.TipoConta
 import kotlinx.coroutines.flow.Flow
@@ -56,6 +59,7 @@ private class FakeApi : HemareApi {
     val estoqueEnviado = mutableListOf<EstoqueDto>()
     val necessidadesEnviadas = mutableListOf<NecessidadeRequest>()
     val doacoesConfirmadas = mutableListOf<Int>()
+    val perfisEnviados = mutableListOf<PerfilHospitalRequest>()
 
     private fun conferir() {
         if (foraDoAr) throw IOException("sem conexão")
@@ -79,6 +83,10 @@ private class FakeApi : HemareApi {
     override suspend fun listarLocais(cidade: String?): List<LocalDto> {
         conferir()
         return locais.filter { cidade == null || it.cidade.contains(cidade, true) }
+    }
+
+    override suspend fun salvarPerfilHospital(token: String, corpo: PerfilHospitalRequest): MensagemResponse {
+        conferir(); perfisEnviados += corpo; return MensagemResponse("ok")
     }
 
     override suspend fun estoque(token: String): List<EstoqueDto> = emptyList()
@@ -139,7 +147,7 @@ private class FakeHospitalDao : HospitalDao {
         necessidades.value = necessidades.value + necessidade.copy(id = id)
         return id.toLong()
     }
-    override fun observarConfirmados(hospital: String): Flow<List<Int>> = confirmadas.map { l -> l.filter { it.hospitalEmail == hospital }.map { it.doadorId } }
+    override fun observarDoacoes(hospital: String): Flow<List<DoacaoConfirmadaEntity>> = confirmadas.map { l -> l.filter { it.hospitalEmail == hospital } }
     override suspend fun confirmarDoacao(doacao: DoacaoConfirmadaEntity) { confirmadas.value = confirmadas.value + doacao }
 }
 
@@ -200,6 +208,16 @@ class AutenticacaoRepositoryImplTest {
         val r = repositorio.cadastrar("Joana", "joana@email.com", "senha1234", TipoConta.DOADOR)
         assertTrue(r is Resultado.Sucesso)
         assertTrue(repositorio.entrar("joana@email.com", "senha1234") is Resultado.Sucesso)
+    }
+
+    @Test
+    fun `cadastro de hospital guarda o perfil no aparelho e envia ao servidor`() = runTest {
+        val perfil = PerfilHospital("11222333000181", "1234567", "50000-000", "Rua A", "10", "Boa Vista", "", "Recife", "PE")
+        val r = repositorio.cadastrar("Hospital Novo", "novo@hospital.com", "senha1234", TipoConta.HOSPITAL, perfil)
+        val conta = (r as Resultado.Sucesso).valor
+        assertEquals("Recife", conta.perfilHospital?.cidade)
+        assertEquals("11222333000181", contas.contas["novo@hospital.com"]?.cnpj)
+        assertEquals(listOf("11222333000181"), api.perfisEnviados.map { it.cnpj })
     }
 
     @Test
@@ -266,7 +284,7 @@ class HospitalRepositoryImplTest {
         val doadores = repositorio.doadoresCompativeis(necessidade)
         assertEquals(listOf("Doadora Remota", "Doador anônimo"), doadores.map { it.nome })
 
-        repositorio.confirmarDoacao(hospital, 55)
+        repositorio.confirmarDoacao(hospital, doadores.first())
         assertEquals(listOf(55), api.doacoesConfirmadas)
         assertEquals(setOf(55), repositorio.observarConfirmados(hospital).first())
     }
@@ -278,6 +296,16 @@ class HospitalRepositoryImplTest {
         val r = repositorio.publicar(hospital, "O-", "emergencia")
         assertEquals(Resultado.Sucesso("✅ Necessidade salva no aparelho (servidor indisponível)."), r)
         assertEquals(1, repositorio.observarNecessidades(hospital).first().size)
+    }
+
+    @Test
+    fun `doacao confirmada entra no historico com nome e tipo`() = runTest {
+        val ana = DoadorCompativel(1, "Ana Beatriz Souza", "O-", "São Paulo, SP", "(11) 91234-5678", true)
+        repositorio.confirmarDoacao(hospital, ana)
+        val historico = repositorio.observarHistorico(hospital).first()
+        assertEquals(listOf("Ana Beatriz Souza"), historico.map { it.doadorNome })
+        assertEquals("O-", historico.single().tipoSanguineo)
+        assertTrue(historico.single().dataHora.contains("às"))
     }
 
     @Test
@@ -297,7 +325,7 @@ class HospitalRepositoryImplTest {
     @Test
     fun `doador local nao e confirmado na API`() = runTest {
         sessao.token = "token-123"
-        repositorio.confirmarDoacao(hospital, 1)
+        repositorio.confirmarDoacao(hospital, DoadorCompativel(1, "Ana Beatriz Souza", "O-", "São Paulo, SP", "(11) 91234-5678", true))
         assertTrue(api.doacoesConfirmadas.isEmpty())
         assertEquals(setOf(1), repositorio.observarConfirmados(hospital).first())
     }

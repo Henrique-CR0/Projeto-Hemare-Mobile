@@ -1,20 +1,21 @@
 package com.example.hemaremobile
 
+import com.example.hemaremobile.domain.TipoConta
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 class AutenticacaoViewModelTest {
+    @get:Rule val regra = RegraDispatcherPrincipal()
 
-    private lateinit var viewModel: AutenticacaoViewModel
+    private val repositorio = FakeAutenticacaoRepository()
 
-    @Before
-    fun setUp() {
-        viewModel = AutenticacaoViewModel()
-    }
+    // Criado sob demanda: viewModelScope precisa do Dispatchers.Main trocado pela regra.
+    private val viewModel by lazy { AutenticacaoViewModel(repositorio) }
 
     private fun cadastrarHospitalPadrao() {
         viewModel.cadastrarHospital(
@@ -42,6 +43,7 @@ class AutenticacaoViewModelTest {
     fun cadastroDeDoadorJaDeixaLogado() {
         viewModel.cadastrarDoador("Ana", "ana@teste.com", "Senha123")
         assertEquals(TipoConta.DOADOR, viewModel.uiState.value.contaLogada?.tipo)
+        assertFalse(viewModel.uiState.value.carregando)
     }
 
     @Test
@@ -72,14 +74,11 @@ class AutenticacaoViewModelTest {
     }
 
     @Test
-    fun recadastroComMesmoEmailSubstituiAContaAnterior() {
-        viewModel.cadastrarDoador("Ana", "ana@teste.com", "Senha123")
-        viewModel.cadastrarDoador("Ana Nova", "ana@teste.com", "Nova456")
-        viewModel.sair()
-        viewModel.entrar("ana@teste.com", "Senha123")
+    fun cadastroComEmailRepetidoFalha() {
+        repositorio.semear("Maria", "maria@teste.com", "Senha123")
+        viewModel.cadastrarDoador("Outra", "maria@teste.com", "Senha456")
         assertNull(viewModel.uiState.value.contaLogada)
-        viewModel.entrar("ana@teste.com", "Nova456")
-        assertEquals("Ana Nova", viewModel.uiState.value.contaLogada?.nome)
+        assertEquals("❌ Esse email já está cadastrado.", viewModel.uiState.value.erro)
     }
 
     @Test
@@ -87,11 +86,13 @@ class AutenticacaoViewModelTest {
         cadastrarHospitalPadrao()
         viewModel.sair()
         assertNull(viewModel.uiState.value.contaLogada)
+        assertTrue(repositorio.saiu)
     }
 
     @Test
     fun limparErroApagaMensagem() {
         viewModel.entrar("", "")
+        assertTrue(viewModel.uiState.value.erro.isNotEmpty())
         viewModel.limparErro()
         assertEquals("", viewModel.uiState.value.erro)
     }

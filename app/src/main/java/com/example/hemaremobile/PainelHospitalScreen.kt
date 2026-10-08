@@ -121,7 +121,7 @@ fun PainelHospitalScreen(
                 CartaoMatch(
                     necessidade = necessidade,
                     tiposCompativeis = viewModel.tiposCompativeis(necessidade.tipoSanguineo),
-                    doadores = viewModel.doadoresCompativeis(necessidade.tipoSanguineo),
+                    doadores = uiState.doadoresMatch,
                     confirmados = uiState.confirmados,
                     onConfirmar = viewModel::confirmarDoacao,
                     onFechar = viewModel::fecharMatch

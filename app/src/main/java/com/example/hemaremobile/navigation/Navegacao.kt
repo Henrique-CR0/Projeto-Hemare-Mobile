@@ -18,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -29,7 +30,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.hemaremobile.OndeDoarViewModel
+import com.example.hemaremobile.di.HemareApplication
 import com.example.hemaremobile.AutenticacaoViewModel
 import com.example.hemaremobile.CadastroDoadorScreen
 import com.example.hemaremobile.CadastroHospitalScreen
@@ -169,7 +173,9 @@ fun HemareApp(
                     PossoDoarScreen(onVoltar = { navController.popBackStack() })
                 }
                 composable(RotasLista.ONDE_DOAR) {
-                    OndeDoarScreen(onVoltar = { navController.popBackStack() })
+                    val container = (LocalContext.current.applicationContext as HemareApplication).container
+                    val ondeDoarViewModel: OndeDoarViewModel = viewModel(factory = container.fabricaOndeDoar)
+                    OndeDoarScreen(onVoltar = { navController.popBackStack() }, viewModel = ondeDoarViewModel)
                 }
                 composable(RotasLista.GUIA) {
                     GuiaScreen(onVoltar = { navController.popBackStack() })
@@ -241,6 +247,8 @@ private fun HospitalApp(
     onSair: () -> Unit
 ) {
     val navController = rememberNavController()
+    val container = (LocalContext.current.applicationContext as HemareApplication).container
+    val fabricaPainel = remember(emailHospital) { container.fabricaPainelHospital(emailHospital) }
 
     Scaffold(
         bottomBar = { HospitalBottomBar(navController) }
@@ -253,7 +261,8 @@ private fun HospitalApp(
             navigation(startDestination = RotasHospital.HUB, route = AbaHospital.Painel.rota) {
                 composable(RotasHospital.HUB) {
                     val painelViewModel: PainelHospitalViewModel = viewModel(
-                        navController.getBackStackEntry(AbaHospital.Painel.rota)
+                        viewModelStoreOwner = navController.getBackStackEntry(AbaHospital.Painel.rota),
+                        factory = fabricaPainel
                     )
                     PainelHospitalHubScreen(
                         nomeHospital = nomeHospital,
@@ -265,7 +274,8 @@ private fun HospitalApp(
                 }
                 composable(RotasHospital.ESTOQUE) {
                     val painelViewModel: PainelHospitalViewModel = viewModel(
-                        navController.getBackStackEntry(AbaHospital.Painel.rota)
+                        viewModelStoreOwner = navController.getBackStackEntry(AbaHospital.Painel.rota),
+                        factory = fabricaPainel
                     )
                     PainelHospitalScreen(
                         onVoltar = { navController.popBackStack() },
@@ -274,7 +284,8 @@ private fun HospitalApp(
                 }
                 composable(RotasHospital.HISTORICO) {
                     val painelViewModel: PainelHospitalViewModel = viewModel(
-                        navController.getBackStackEntry(AbaHospital.Painel.rota)
+                        viewModelStoreOwner = navController.getBackStackEntry(AbaHospital.Painel.rota),
+                        factory = fabricaPainel
                     )
                     HistoricoDoacoesScreen(
                         onVoltar = { navController.popBackStack() },
@@ -291,7 +302,8 @@ private fun HospitalApp(
                 }
                 composable(RotasHospital.PLANO) {
                     val painelViewModel: PainelHospitalViewModel = viewModel(
-                        navController.getBackStackEntry(AbaHospital.Painel.rota)
+                        viewModelStoreOwner = navController.getBackStackEntry(AbaHospital.Painel.rota),
+                        factory = fabricaPainel
                     )
                     PlanoScreen(
                         onVoltar = { navController.popBackStack() },
