@@ -1,5 +1,7 @@
 package com.example.hemaremobile
 
+import com.example.hemaremobile.domain.NivelResultado
+import com.example.hemaremobile.domain.ResultadoTriagem
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

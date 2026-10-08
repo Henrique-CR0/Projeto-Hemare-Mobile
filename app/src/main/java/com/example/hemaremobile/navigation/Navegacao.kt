@@ -1,5 +1,7 @@
 package com.example.hemaremobile.navigation
 
+import com.example.hemaremobile.domain.TipoConta
+import com.example.hemaremobile.domain.PerfilHospital
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -43,11 +45,9 @@ import com.example.hemaremobile.OndeDoarScreen
 import com.example.hemaremobile.PainelHospitalHubScreen
 import com.example.hemaremobile.PainelHospitalScreen
 import com.example.hemaremobile.PainelHospitalViewModel
-import com.example.hemaremobile.PerfilHospital
 import com.example.hemaremobile.PerfilInstituicaoScreen
 import com.example.hemaremobile.PlanoScreen
 import com.example.hemaremobile.PossoDoarScreen
-import com.example.hemaremobile.TipoConta
 
 /** As 3 abas principais do app do doador (bottom navigation). */
 sealed class Aba(val rota: String, val rotulo: String, val icone: ImageVector) {

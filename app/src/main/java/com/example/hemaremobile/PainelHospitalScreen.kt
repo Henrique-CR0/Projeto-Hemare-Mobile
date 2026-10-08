@@ -1,5 +1,10 @@
 package com.example.hemaremobile
 
+import com.example.hemaremobile.domain.TIPOS_SANGUINEOS
+import com.example.hemaremobile.domain.NIVEIS_ESTOQUE
+import com.example.hemaremobile.domain.URGENCIAS_DETALHADAS
+import com.example.hemaremobile.domain.Necessidade
+import com.example.hemaremobile.domain.DoadorCompativel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
