@@ -10,7 +10,9 @@ Arquivo no Figma: <https://www.figma.com/design/WKfC8AU2t05sCkCjWd9HwG>
 
 ## Telas desenhadas
 
-Login · Cadastro de doador · Cadastro de hospital · Início · Lista · Posso doar? (+ resultado) · Onde doar · Guia · Mitos e verdades · Configuração (doador e hospital) · Painel do hospital (+ necessidade publicada, + doadores compatíveis) · Histórico de doações · Perfil da instituição · Plano.
+Login · Cadastro de doador · Cadastro de hospital · Início · Lista · Posso doar? (+ resultado) · Onde doar · Guia · Mitos e verdades · Configuração (doador e hospital) · Painel do hospital (+ necessidade publicada, + doadores compatíveis).
+
+> ⚠️ Pendente no Figma: as telas novas do hospital (hub, Histórico de doações, Perfil da instituição e Plano), a paleta escura mais quente, a seta de voltar nos cabeçalhos e os 4 integrantes em Configuração (já existem no app, mas o Figma ainda mostra a versão anterior).
 
 ## Protótipo navegável
 
