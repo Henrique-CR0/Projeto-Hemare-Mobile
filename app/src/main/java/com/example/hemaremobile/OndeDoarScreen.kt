@@ -1,5 +1,6 @@
 package com.example.hemaremobile
 
+import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -32,40 +33,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
-private data class Hemocentro(
-    val nome: String,
-    val cidade: String,
-    val estado: String,
-    val endereco: String,
-    val telefone: String
-)
-
-/**
- * Presentation Layer: lista fixa (mock) de hemocentros reais do Brasil.
- * A busca por proximidade/GPS real fica para quando a Domain/Data layer existir.
- */
-private val hemocentros = listOf(
-    Hemocentro("Fundação Hemope", "Recife", "PE", "Endereço de exemplo", "Central de atendimento"),
-    Hemocentro("Fundação Pró-Sangue", "São Paulo", "SP", "Endereço de exemplo", "Central de atendimento"),
-    Hemocentro("Hemominas", "Belo Horizonte", "MG", "Endereço de exemplo", "Central de atendimento"),
-    Hemocentro("Hemoce", "Fortaleza", "CE", "Endereço de exemplo", "Central de atendimento"),
-    Hemocentro("Hemorio", "Rio de Janeiro", "RJ", "Endereço de exemplo", "Central de atendimento")
-)
-
 @Composable
-fun OndeDoarScreen(onVoltar: () -> Unit = {}) {
-    var busca by remember { mutableStateOf("") }
-    val filtrados = remember(busca) {
-        if (busca.isBlank()) {
-            hemocentros
-        } else {
-            hemocentros.filter {
-                it.cidade.contains(busca, ignoreCase = true) ||
-                    it.estado.contains(busca, ignoreCase = true) ||
-                    it.nome.contains(busca, ignoreCase = true)
-            }
-        }
-    }
+fun OndeDoarScreen(onVoltar: () -> Unit = {}, viewModel: OndeDoarViewModel) {
+    val uiState by viewModel.uiState.collectAsState()
+    val busca = uiState.busca
+    val filtrados = uiState.hemocentros
 
     LazyColumn(
         modifier = Modifier
@@ -81,14 +53,14 @@ fun OndeDoarScreen(onVoltar: () -> Unit = {}) {
         item {
             Column(modifier = Modifier.padding(horizontal = 20.dp)) {
                 Text(
-                    text = "📍 Lista de exemplo — em breve conectada à localização real do doador.",
+                    text = if (uiState.carregando) "Carregando hemocentros…" else "📍 Hemocentros cadastrados — funciona também sem internet.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
                 OutlinedTextField(
                     value = busca,
-                    onValueChange = { busca = it },
+                    onValueChange = viewModel::alterarBusca,
                     placeholder = { Text("Buscar por cidade ou estado") },
                     leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
                     singleLine = true,
@@ -97,7 +69,7 @@ fun OndeDoarScreen(onVoltar: () -> Unit = {}) {
             }
         }
 
-        items(filtrados) { hemocentro ->
+        items(filtrados, key = { it.id }) { hemocentro ->
             Card(
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -125,7 +97,7 @@ fun OndeDoarScreen(onVoltar: () -> Unit = {}) {
             }
         }
 
-        if (filtrados.isEmpty()) {
+        if (filtrados.isEmpty() && !uiState.carregando) {
             item {
                 Text(
                     text = "Nenhum local encontrado para essa busca.",

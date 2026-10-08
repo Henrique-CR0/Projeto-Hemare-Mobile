@@ -6,9 +6,11 @@ import com.example.hemaremobile.data.repository.HospitalRepository
 import com.example.hemaremobile.data.repository.Preferencias
 import com.example.hemaremobile.data.repository.PreferenciasRepository
 import com.example.hemaremobile.domain.ContaUsuario
+import com.example.hemaremobile.domain.DoacaoConfirmada
 import com.example.hemaremobile.domain.DoadorCompativel
 import com.example.hemaremobile.domain.Hemocentro
 import com.example.hemaremobile.domain.Necessidade
+import com.example.hemaremobile.domain.PerfilHospital
 import com.example.hemaremobile.domain.Resultado
 import com.example.hemaremobile.domain.TipoConta
 import com.example.hemaremobile.domain.tiposCompativeis
@@ -30,23 +32,38 @@ class RegraDispatcherPrincipal(val dispatcher: TestDispatcher = UnconfinedTestDi
 }
 
 class FakeAutenticacaoRepository : AutenticacaoRepository {
-    val contas = mutableMapOf("doador@hemare.com" to Triple("Maria Doadora", "doador123", TipoConta.DOADOR))
+    private class Registro(val conta: ContaUsuario, val senha: String)
+
+    /** Sem contas de exemplo: cada teste cadastra o que precisa (como no app real). */
+    private val contas = mutableMapOf<String, Registro>()
     var saiu = false
+
+    fun semear(nome: String, email: String, senha: String, tipo: TipoConta = TipoConta.DOADOR) {
+        contas[email] = Registro(ContaUsuario(nome, email, tipo), senha)
+    }
 
     override suspend fun entrar(email: String, senha: String): Resultado<ContaUsuario> {
         if (email.isBlank() || senha.isBlank()) return Resultado.Falha("❌ Preencha email e senha.")
-        val conta = contas[email.trim().lowercase()]
-        return if (conta != null && conta.second == senha) {
-            Resultado.Sucesso(ContaUsuario(conta.first, email.trim().lowercase(), conta.third))
+        val registro = contas[email.trim().lowercase()]
+        return if (registro != null && registro.senha == senha) {
+            Resultado.Sucesso(registro.conta)
         } else {
             Resultado.Falha("❌ Email ou senha inválidos.")
         }
     }
 
-    override suspend fun cadastrar(nome: String, email: String, senha: String, tipo: TipoConta): Resultado<ContaUsuario> {
-        if (contas.containsKey(email)) return Resultado.Falha("❌ Esse email já está cadastrado.")
-        contas[email] = Triple(nome, senha, tipo)
-        return Resultado.Sucesso(ContaUsuario(nome, email, tipo))
+    override suspend fun cadastrar(
+        nome: String,
+        email: String,
+        senha: String,
+        tipo: TipoConta,
+        perfil: PerfilHospital?
+    ): Resultado<ContaUsuario> {
+        val chave = email.trim().lowercase()
+        if (contas.containsKey(chave)) return Resultado.Falha("❌ Esse email já está cadastrado.")
+        val conta = ContaUsuario(nome, chave, tipo, perfil)
+        contas[chave] = Registro(conta, senha)
+        return Resultado.Sucesso(conta)
     }
 
     override fun sair() {
@@ -69,6 +86,7 @@ class FakeHospitalRepository : HospitalRepository {
     private val estoque = MutableStateFlow<Map<String, String>>(emptyMap())
     private val necessidades = MutableStateFlow<List<Necessidade>>(emptyList())
     private val confirmados = MutableStateFlow<Set<Int>>(emptySet())
+    private val historico = MutableStateFlow<List<DoacaoConfirmada>>(emptyList())
     private val doadores = listOf(
         DoadorCompativel(1, "Ana", "O-", "São Paulo, SP", "(11) 9999-0000", true),
         DoadorCompativel(2, "Carlos", "O+", "São Paulo, SP", "", false),
@@ -92,8 +110,10 @@ class FakeHospitalRepository : HospitalRepository {
         doadores.filter { it.tipoSanguineo in tiposCompativeis(necessidade.tipoSanguineo) }
 
     override fun observarConfirmados(hospital: String): Flow<Set<Int>> = confirmados
-    override suspend fun confirmarDoacao(hospital: String, doadorId: Int) {
-        confirmados.value = confirmados.value + doadorId
+    override fun observarHistorico(hospital: String): Flow<List<DoacaoConfirmada>> = historico
+    override suspend fun confirmarDoacao(hospital: String, doador: DoadorCompativel) {
+        confirmados.value = confirmados.value + doador.id
+        historico.value = listOf(DoacaoConfirmada(doador.nome, doador.tipoSanguineo, "01/01 às 10:00")) + historico.value
     }
 }
 

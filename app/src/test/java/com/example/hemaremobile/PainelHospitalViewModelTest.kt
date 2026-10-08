@@ -1,19 +1,18 @@
 package com.example.hemaremobile
 
+import com.example.hemaremobile.domain.Necessidade
+import com.example.hemaremobile.domain.TIPOS_SANGUINEOS
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 class PainelHospitalViewModelTest {
+    @get:Rule val regra = RegraDispatcherPrincipal()
 
-    private lateinit var viewModel: PainelHospitalViewModel
-
-    @Before
-    fun setUp() {
-        viewModel = PainelHospitalViewModel()
-    }
+    // Criado sob demanda: o init usa viewModelScope, que precisa do Dispatchers.Main trocado pela regra.
+    private val viewModel by lazy { PainelHospitalViewModel(FakeHospitalRepository(), "hospital@hemare.com") }
 
     @Test
     fun oNegativoSoRecebeDeONegativo() {
@@ -31,9 +30,10 @@ class PainelHospitalViewModelTest {
     }
 
     @Test
-    fun doadoresCompativeisSoTrazTiposPermitidos() {
+    fun doadoresDoMatchSoTrazTiposPermitidos() {
+        viewModel.verMatch(Necessidade(1, "A-", "alerta"))
         val permitidos = viewModel.tiposCompativeis("A-")
-        val doadores = viewModel.doadoresCompativeis("A-")
+        val doadores = viewModel.uiState.value.doadoresMatch
         assertTrue(doadores.isNotEmpty())
         assertTrue(doadores.all { it.tipoSanguineo in permitidos })
     }
@@ -42,7 +42,7 @@ class PainelHospitalViewModelTest {
     fun publicarSemTipoMostraErroENaoCriaNecessidade() {
         viewModel.publicar()
         assertTrue(viewModel.uiState.value.necessidades.isEmpty())
-        assertTrue(viewModel.uiState.value.mensagem.startsWith("❌"))
+        assertEquals("❌ Escolha o tipo sanguíneo.", viewModel.uiState.value.mensagem)
     }
 
     @Test
@@ -55,6 +55,7 @@ class PainelHospitalViewModelTest {
         assertEquals("O+", estado.necessidades[0].tipoSanguineo)
         assertEquals("critico", estado.necessidades[0].urgencia)
         assertEquals("", estado.tipoSelecionado)
+        assertTrue(estado.mensagem.startsWith("✅"))
     }
 
     @Test
@@ -65,7 +66,8 @@ class PainelHospitalViewModelTest {
 
     @Test
     fun confirmarDoacaoRegistraNoHistorico() {
-        val doador = viewModel.doadoresCompativeis("O-").first()
+        viewModel.verMatch(Necessidade(1, "O-", "alerta"))
+        val doador = viewModel.uiState.value.doadoresMatch.first()
         viewModel.confirmarDoacao(doador.id)
         val estado = viewModel.uiState.value
         assertTrue(doador.id in estado.confirmados)
@@ -85,5 +87,6 @@ class PainelHospitalViewModelTest {
         viewModel.verMatch(Necessidade(1, "A+", "alerta"))
         viewModel.fecharMatch()
         assertNull(viewModel.uiState.value.necessidadeEmMatch)
+        assertTrue(viewModel.uiState.value.doadoresMatch.isEmpty())
     }
 }

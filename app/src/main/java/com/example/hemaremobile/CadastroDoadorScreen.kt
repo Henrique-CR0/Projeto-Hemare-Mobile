@@ -1,5 +1,7 @@
 package com.example.hemaremobile
 
+import com.example.hemaremobile.domain.emailValido
+import com.example.hemaremobile.domain.forcaSenha
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,16 +38,6 @@ import androidx.compose.ui.unit.sp
 import com.example.hemaremobile.ui.theme.HemareVerde
 import com.example.hemaremobile.ui.theme.HemareVermelho
 
-private val PADRAO_EMAIL = Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")
-
-private fun forcaSenha(senha: String): Int {
-    var forca = 0
-    if (senha.length >= 8) forca++
-    if (senha.any { it.isUpperCase() } && senha.any { it.isLowerCase() }) forca++
-    if (senha.any { it.isDigit() } && senha.any { !it.isLetterOrDigit() }) forca++
-    return forca
-}
-
 private val ROTULOS_FORCA = listOf("", "Fraca", "Média", "Forte")
 private val CORES_FORCA = listOf(Color.Transparent, HemareVermelho, Color(0xFFE0B000), HemareVerde)
 
@@ -61,8 +53,8 @@ fun CadastroDoadorScreen(
     var senha by remember { mutableStateOf("") }
     var mensagem by remember { mutableStateOf("") }
 
-    val emailValido = email.isNotEmpty() && PADRAO_EMAIL.matches(email)
-    val mostrarEmailErro = emailTocado && email.isNotEmpty() && !emailValido
+    val emailOk = emailValido(email)
+    val mostrarEmailErro = emailTocado && email.isNotEmpty() && !emailOk
     val forca = forcaSenha(senha)
 
     fun digitarNome(valor: String) {
@@ -75,7 +67,7 @@ fun CadastroDoadorScreen(
             nome.isBlank() || email.isBlank() || senha.isBlank() -> {
                 mensagem = "❌ Preencha todos os campos."
             }
-            !emailValido -> {
+            !emailOk -> {
                 emailTocado = true
                 mensagem = "❌ Digite um email válido (ex: nome@email.com)."
             }
