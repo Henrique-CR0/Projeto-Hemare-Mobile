@@ -1,0 +1,9 @@
+{
+  "name": "Hemare Mobile — Atualizar design",
+  "id": "hemare-mobile-gerar-design",
+  "api": "1.0.0",
+  "main": "atualizar.js",
+  "editorType": ["figma"],
+  "documentAccess": "dynamic-page",
+  "networkAccess": { "allowedDomains": ["none"] }
+}
